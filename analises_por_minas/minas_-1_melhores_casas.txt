@@ -1,0 +1,5 @@
+Casa 16 (Linha 4, Coluna 1) → 12.90% de bomba
+Casa 15 (Linha 3, Coluna 5) → 19.35% de bomba
+Casa 21 (Linha 5, Coluna 1) → 19.35% de bomba
+Casa 18 (Linha 4, Coluna 3) → 19.35% de bomba
+Casa 7 (Linha 2, Coluna 2) → 22.58% de bomba
