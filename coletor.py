@@ -33,23 +33,6 @@ def check_game_over(driver):
         return "Em andamento"
     except: return "Erro ao verificar"
 
-def get_seed_value(driver, label_text):
-    try:
-        label = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, f'//label[text()="{label_text}"]')))
-        return label.find_element(By.XPATH, 
-            './ancestor::div[@class="sc-WwxRR jDcWFc"]//div[@class="sc-hLMZRY xjPGZ"]'
-            '//div[@class="sc-bWxZAa lozsED"]//div[@class="sc-kcdLor dSTEgF"]'
-        ).text.strip()
-    except: return "erro"
-
-def get_nonce_value(driver):
-    try:
-        label = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, '//label[text()="Nonce"]')))
-        return label.find_element(By.XPATH, 
-            './ancestor::div[@class="sc-WwxRR jDcWFc"]//div[@class="sc-hLMZRY xjPGZ"]'
-            '//input[@class="sc-jwqMsZ ezUapy"]').get_attribute('value')
-    except: return "erro"
-
 def get_board_state(driver):
     try:
         grid = driver.find_element(By.XPATH, '//div[contains(@class, "sc-ewMzwg")]')
@@ -94,18 +77,13 @@ def main():
     try:
         while True:
             input("\n✅ Jogue uma rodada e pressione [Enter] para coletar...")
+
             timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-
-            # Salvar HTML
-            with open("pagina_apos_jogada.html", "w", encoding="utf-8") as f:
-                f.write(driver.page_source)
-
             resultado = check_game_over(driver)
             print(f"✅ Resultado: {resultado}")
 
             url = driver.current_url
             minas = url.split("mines=")[1].split("&")[0] if "mines=" in url else "desconhecido"
-
             try:
                 minas = int(minas)
             except:
@@ -118,35 +96,14 @@ def main():
             imprimir_tabuleiro(tabuleiro)
             qtd_bombas = contar_bombas(tabuleiro)
 
-            try:
-                WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, '//a[starts-with(text(), "x") and contains(text(), ".")]'))).click()
-                WebDriverWait(driver, 20).until(EC.visibility_of_element_located((By.XPATH, '//label[text()="Client seed"]')))
-                time.sleep(2)
-            except:
-                print("❌ Erro ao abrir modal.")
-                continue
-
-            client = get_seed_value(driver, 'Client seed')
-            server = get_seed_value(driver, 'Server seed')
-            nonce = get_nonce_value(driver)
-
-            try:
-                ActionChains(driver).move_to_element(driver.find_element(By.TAG_NAME, "body")).perform()
-                ActionChains(driver).move_by_offset(10, 10).click().perform()
-                time.sleep(1)
-            except:
-                pass
-
             jogada = {
                 "timestamp": timestamp,
                 "minas": minas,
                 "quantidade_bombas": qtd_bombas,
                 "resultado": resultado,
-                "server_seed": server,
-                "client_seed": client,
-                "nonce": nonce,
                 **{f"casa_{i+1}": tabuleiro[i] for i in range(25)}
             }
+
             salvar_dados_csv(jogada)
             print("\n✅ Rodada salva!")
 
