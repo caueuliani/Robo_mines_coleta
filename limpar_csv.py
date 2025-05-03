@@ -15,7 +15,7 @@ if not os.path.exists(ARQUIVO_ENTRADA):
 df = pd.read_csv(ARQUIVO_ENTRADA)
 
 # Remove linhas com campos essenciais ausentes
-colunas_obrigatorias = ["timestamp", "minas", "resultado", "client_seed", "server_seed", "nonce"]
+colunas_obrigatorias = ["timestamp", "minas", "resultado"]
 df = df.dropna(subset=colunas_obrigatorias)
 
 # Converte o campo 'minas' para inteiro válido
