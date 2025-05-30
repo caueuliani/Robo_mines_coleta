@@ -1,4 +1,5 @@
 ✅ Resumo de Encerramento do Projeto - Robo Mines Coleta
+
 🎯 Objetivo Inicial
 Desenvolver um sistema automatizado para:
 
