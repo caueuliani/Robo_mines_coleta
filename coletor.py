@@ -24,41 +24,50 @@ def inicializar_driver():
 def check_game_over(driver):
     try:
         mult = WebDriverWait(driver, 30).until(
-            EC.presence_of_element_located((By.XPATH, '//div[@class="sc-jznrGB dSGwfN"]/div[1]//a[@class="sc-gdZYDh fszAEG"]'))
+            EC.presence_of_element_located((By.XPATH, '//a[starts-with(text(), "x") and contains(text(), ".")]'))
         )
         text = mult.text.strip()
         color = mult.value_of_css_property('color')
-        if text == "x0.00": return "Derrota"
-        elif "119, 255, 168" in color: return "Vitória"
+        if text == "x0.00":
+            return "Derrota"
+        elif "119, 255, 168" in color:
+            return "Vitória"
         return "Em andamento"
-    except: return "Erro ao verificar"
+    except Exception as e:
+        print(f"⚠️ Erro ao verificar game over: {e}")
+        return "Erro ao verificar"
 
 def get_board_state(driver):
     try:
-        grid = driver.find_element(By.XPATH, '//div[contains(@class, "sc-ewMzwg")]')
-        cells = grid.find_elements(By.XPATH, './div[contains(@class, "sc-gnlKGm")]')
+        grid = driver.find_element(By.XPATH, '//div[contains(@class, "sc-bwgtgJ fRRfzc")]')
+        cells = grid.find_elements(By.XPATH, './div[contains(@class, "sc-dmFEqP")]')
+        if len(cells) != 25:
+            print(f"⚠️ Apenas {len(cells)} células detectadas no grid.")
+            return []
         board = []
         for cell in cells:
             try:
-                if cell.find_element(By.XPATH, './/div[contains(@class, "sc-bCCZMN")]').is_displayed():
+                if cell.find_element(By.XPATH, './/div[contains(@class, "sc-fptaHq")]'):
                     board.append('💎')
                     continue
             except: pass
             try:
-                if cell.find_element(By.XPATH, './/div[contains(@class, "sc-ggPeai")]').is_displayed():
+                if cell.find_element(By.XPATH, './/div[contains(@class, "sc-cvjAXX")]'):
                     board.append('💣')
                     continue
             except: pass
             board.append('⬜')
         return board
-    except: return []
+    except Exception as e:
+        print(f"⚠️ Erro ao obter estado do tabuleiro: {e}")
+        return []
 
 def contar_bombas(tabuleiro):
     return tabuleiro.count('💣')
 
 def imprimir_tabuleiro(tabuleiro):
     print("\n🧩 Tabuleiro:")
-    for i in range(0, 25, 5):
+    for i in range(0, len(tabuleiro), 5):
         print(' '.join(tabuleiro[i:i+5]))
 
 def salvar_dados_csv(dados_atuais, caminho="jogadas.csv"):
@@ -74,38 +83,37 @@ def salvar_dados_csv(dados_atuais, caminho="jogadas.csv"):
 
 def main():
     driver = inicializar_driver()
+    jogadas_realizadas = 0
     try:
         while True:
             input("\n✅ Jogue uma rodada e pressione [Enter] para coletar...")
 
             timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
             resultado = check_game_over(driver)
-            print(f"✅ Resultado: {resultado}")
-
-            url = driver.current_url
-            minas = url.split("mines=")[1].split("&")[0] if "mines=" in url else "desconhecido"
-            try:
-                minas = int(minas)
-            except:
-                minas = -1
+            print(f"✅ Resultado: {resultado}")            
 
             ActionChains(driver).send_keys(Keys.ENTER).perform()
             time.sleep(1)
 
             tabuleiro = get_board_state(driver)
+            if len(tabuleiro) != 25:
+                print(f"❌ Tabuleiro incompleto: {len(tabuleiro)} células detectadas. Pulando essa rodada.")
+                continue
+
             imprimir_tabuleiro(tabuleiro)
             qtd_bombas = contar_bombas(tabuleiro)
 
             jogada = {
                 "timestamp": timestamp,
-                "minas": minas,
-                "quantidade_bombas": qtd_bombas,
+                "minas": qtd_bombas,
                 "resultado": resultado,
                 **{f"casa_{i+1}": tabuleiro[i] for i in range(25)}
             }
 
             salvar_dados_csv(jogada)
             print("\n✅ Rodada salva!")
+            jogadas_realizadas += 1  # ✅ Incrementa contador
+            print(f"📊 Total de jogadas nesta sessão: {jogadas_realizadas}")
 
     except KeyboardInterrupt:
         print("\n⛔ Encerrando coleta.")

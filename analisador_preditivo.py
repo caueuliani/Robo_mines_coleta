@@ -1,10 +1,9 @@
 import pandas as pd
 import numpy as np
 import os
-
-ARQUIVO_LIMPO = "jogadas_limpo.csv"
-PASTA_SAIDA = "analises_por_minas"
-os.makedirs(PASTA_SAIDA, exist_ok=True)
+import seaborn as sns
+import matplotlib.pyplot as plt
+import sys
 
 def inicializar_matriz():
     return pd.DataFrame(
@@ -26,14 +25,38 @@ def atualizar_matriz(matriz, jogadas):
 def calcular_probabilidades(matriz, total):
     return matriz / total
 
-def analisar_grupo(minas, grupo_df):
+def gerar_heatmap(matriz_prob, path_heatmap, minas):
+    plt.figure(figsize=(6, 5))
+    sns.heatmap(matriz_prob, annot=True, fmt=".2f", cmap="Reds", cbar=True, linewidths=.5)
+    plt.title(f"Heatmap % Bombas - {minas} Minas")
+    plt.xticks(np.arange(5) + 0.5, [f"C{i+1}" for i in range(5)])
+    plt.yticks(np.arange(5) + 0.5, [f"L{i+1}" for i in range(5)], rotation=0)
+    plt.tight_layout()
+    plt.savefig(path_heatmap)
+    plt.close()
+
+def analisar_grupo(minas, grupo_df, path_dir):
+    if len(grupo_df) == 0:
+        print(f"⚠️ Nenhuma jogada para {minas} minas. Pulando...")
+        return
+
     print(f"\n🔎 Analisando {len(grupo_df)} jogadas com {minas} minas...")
+
     matriz_bombas = atualizar_matriz(inicializar_matriz(), grupo_df)
     matriz_prob = calcular_probabilidades(matriz_bombas, len(grupo_df))
 
-    path_base = os.path.join(PASTA_SAIDA, f"minas_{minas}")
-    matriz_bombas.to_csv(f"{path_base}_contagem.csv")
-    matriz_prob.to_csv(f"{path_base}_probabilidades.csv")
+    os.makedirs(path_dir, exist_ok=True)
+
+    path_contagem = os.path.join(path_dir, "contagem.csv")
+    path_probabilidades = os.path.join(path_dir, "probabilidades.csv")
+    path_sugestoes = os.path.join(path_dir, "melhores_casas.txt")
+    path_heatmap = os.path.join(path_dir, "heatmap_probabilidades.png")
+
+    matriz_bombas.to_csv(path_contagem)
+    matriz_prob.to_csv(path_probabilidades)
+
+    print(f"✅ Contagem salva em {path_contagem}")
+    print(f"✅ Probabilidades salvas em {path_probabilidades}")
 
     print("\n🔢 Matriz de Probabilidades (% de bomba):")
     for i in range(5):
@@ -50,24 +73,33 @@ def analisar_grupo(minas, grupo_df):
         sugestoes.append(f"Casa {idx+1} (Linha {linha+1}, Coluna {coluna+1}) → {prob:.2f}% de bomba")
         print(sugestoes[-1])
 
-    with open(f"{path_base}_melhores_casas.txt", "w", encoding="utf-8") as f:
+    with open(path_sugestoes, "w", encoding="utf-8") as f:
         f.write("\n".join(sugestoes))
+    print(f"✅ Sugestões salvas em {path_sugestoes}")
+
+    gerar_heatmap(matriz_prob, path_heatmap, minas)
+    print(f"🖼️ Heatmap salvo em {path_heatmap}")
 
 def main():
-    if not os.path.exists(ARQUIVO_LIMPO):
-        print("❌ Arquivo jogadas_limpo.csv não encontrado.")
+    if len(sys.argv) < 2:
+        print("❌ Por favor, informe o caminho da pasta como argumento.")
+        print("Exemplo: python analisador_preditivo.py dados/8_minas")
         return
 
-    df = pd.read_csv(ARQUIVO_LIMPO)
+    pasta = sys.argv[1]
+    arquivo_limp = os.path.join(pasta, "jogadas_limpo.csv")
+
+    if not os.path.exists(arquivo_limp):
+        print(f"❌ Arquivo '{arquivo_limp}' não encontrado.")
+        return
+
+    df = pd.read_csv(arquivo_limp)
     if "minas" not in df.columns:
         print("❌ Coluna 'minas' não encontrada no CSV.")
         return
 
-    grupos = df.groupby("minas")
-    print(f"📊 Analisando {len(df)} jogadas em {len(grupos)} grupos de minas...")
-
-    for minas, grupo in grupos:
-        analisar_grupo(minas, grupo)
+    minas = df["minas"].iloc[0]  # todas jogadas são do mesmo tipo
+    analisar_grupo(minas, df, pasta)
 
 if __name__ == "__main__":
     main()

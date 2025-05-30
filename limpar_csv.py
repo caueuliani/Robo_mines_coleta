@@ -2,9 +2,8 @@ import pandas as pd
 import os
 import subprocess
 
-# Caminhos dos arquivos
-ARQUIVO_ENTRADA = "jogadas.csv"
-ARQUIVO_SAIDA = "jogadas_limpo.csv"
+ARQUIVO_ENTRADA = "jogadas_completas.csv"
+PASTA_SAIDA = "dados"
 
 # Verifica se o arquivo de entrada existe
 if not os.path.exists(ARQUIVO_ENTRADA):
@@ -19,9 +18,7 @@ colunas_obrigatorias = ["timestamp", "minas", "resultado"]
 df = df.dropna(subset=colunas_obrigatorias)
 
 # Converte o campo 'minas' para inteiro válido
-df["minas"] = pd.to_numeric(df["minas"], errors="coerce")
-df = df.dropna(subset=["minas"])
-df["minas"] = df["minas"].astype(int)
+df["minas"] = pd.to_numeric(df["minas"], errors="coerce").dropna().astype(int)
 
 # Validação das colunas de casas
 casas = [f"casa_{i}" for i in range(1, 26)]
@@ -29,23 +26,31 @@ if not all(col in df.columns for col in casas):
     print("❌ Colunas de casas de tabuleiro não encontradas.")
     exit()
 
-# Remove linhas inválidas nas casas (devem ter 💣, 💎 ou ⬜)
+# Função para validar linha
 def linha_valida(row):
-    valores = row[casas].tolist()
-    return len(valores) == 25 and all(val in ["💣", "💎", "⬜"] for val in valores)
+    return all(row[f"casa_{i}"] in {"💣", "💎", "⬜"} for i in range(1, 26))
 
-df = df[df.apply(linha_valida, axis=1)]
+# Aplica a validação
+df = df[df.apply(linha_valida, axis=1)].reset_index(drop=True)
 
-# Reseta o índice
-df.reset_index(drop=True, inplace=True)
+# --- Separação por quantidade de minas ---
+minas_unicas = sorted(df["minas"].unique())
+print(f"✅ Encontradas jogadas com as seguintes quantidades de minas: {minas_unicas}")
 
-# Salva o novo CSV limpo
-df.to_csv(ARQUIVO_SAIDA, index=False)
-print(f"✅ CSV limpo salvo em '{ARQUIVO_SAIDA}' com {len(df)} jogadas válidas.")
+for minas in minas_unicas:
+    df_subset = df[df["minas"] == minas]
+    pasta_destino = os.path.join(PASTA_SAIDA, f"{minas}_minas")
+    os.makedirs(pasta_destino, exist_ok=True)
+    
+    arquivo_saida = os.path.join(pasta_destino, "jogadas_limpo.csv")
+    df_subset.to_csv(arquivo_saida, index=False)
+    
+    print(f"✅ Salvo {len(df_subset)} jogadas válidas em '{arquivo_saida}'.")
 
-# Roda os scripts em sequência
-for script in ["analisador_preditivo.py", "analisar_jogadas.py"]:
-    try:
-        subprocess.run(["python", script], check=True)
-    except subprocess.CalledProcessError as e:
-        print(f"❌ Erro ao executar {script}: {e}")
+print("✅ Separação e limpeza concluídas com sucesso!")
+
+# 🚀 Chama o pipeline automaticamente
+try:
+    subprocess.run(["python", "pipeline.py"], check=True)
+except subprocess.CalledProcessError as e:
+    print(f"❌ Erro ao executar pipeline.py: {e}")

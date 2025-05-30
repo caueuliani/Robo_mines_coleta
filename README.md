@@ -1,69 +1,55 @@
-# 🤖 Bot de Análise para Mines (BCH.games)
+✅ Resumo de Encerramento do Projeto - Robo Mines Coleta
+🎯 Objetivo Inicial
+Desenvolver um sistema automatizado para:
 
-Este projeto coleta jogadas do jogo Mines (site [BCH.games](https://bch.games)), analisa as jogadas realizadas e sugere as melhores casas para clicar com base em estatísticas passadas. Ideal para uso pessoal ou futura adaptação para bot de Telegram.
+Coletar dados de jogadas do jogo Mines da plataforma bch.games
 
----
+Analisar estatisticamente os padrões do tabuleiro
 
-## 📁 Estrutura do Projeto
+Criar modelos de machine learning capazes de prever as casas mais seguras para clicar em cada jogada
 
-- `coletor.py`: Script principal que coleta jogadas enquanto você joga manualmente.
-- `limpar_csv.py`: Filtra jogadas inválidas e gera o arquivo `jogadas_limpo.csv`.
-- `analisador_preditivo.py`: Atualiza uma matriz 5x5 com as probabilidades de bomba por casa.
-- `analisar_jogadas.py`: Gera um heatmap visual e um resumo estatístico das jogadas.
-- `jogadas.csv`: Arquivo com todas as jogadas brutas coletadas.
-- `jogadas_limpo.csv`: Arquivo com jogadas filtradas e válidas.
-- `matriz_probabilidades.csv`: Probabilidades normalizadas de bomba por casa.
-- `heatmap_jogadas.csv`: Contagem e porcentagem de bombas e diamantes por casa.
-- `melhores_casas.txt`: Sugestão das casas com menor chance de bomba.
-- `heatmap_bombas.png` e `heatmap_diamantes.png`: Visualizações das probabilidades.
+🔧 O que foi desenvolvido
+✅ Coletor automatizado com Selenium, realizando scraping dos estados do tabuleiro e resultados das jogadas.
+✅ Pipeline completo de pré-processamento, análise e geração de relatórios.
+✅ Visualização de padrões via heatmaps e matrizes de probabilidade.
+✅ Modelo de Machine Learning (Random Forest) treinado com dados reais e simulados para prever as probabilidades de bomba por casa.
+✅ Automatização total via pipeline_auto.py, integrando coleta, simulação, limpeza, treinamento e predição.
 
----
+⚠️ Limitações identificadas
+A quantidade de dados coletados (~1000 jogadas) não foi suficiente para treinar um modelo altamente confiável.
 
-## 🚀 Como Usar
+O jogo possui uma mecânica criptograficamente segura (Provably Fair), o que reduz ou anula a possibilidade de prever o resultado com alta precisão.
 
-1. **Rode o coletor** e jogue manualmente:
-   ```bash
-   python coletor.py
-   ```
+A tentativa de simular dados para aumentar o dataset introduziu possíveis enviesamentos, que podem ter piorado a generalização do modelo.
 
-2. **Após jogar algumas partidas, rode o script de limpeza:**
-   ```bash
-   python limpar_csv.py
-   ```
+Modelos de árvore de decisão e Random Forest não foram capazes de capturar padrões úteis para uma acurácia superior a 50%.
 
-3. **Para visualizar os melhores cliques com heatmap:**
-   ```bash
-   python analisar_jogadas.py
-   ```
+📊 Resultados alcançados
+O modelo gerava previsões baseadas na quantidade de minas e posição da casa, mas na prática as sugestões apresentaram baixa efetividade.
 
----
+Mesmo com ajustes de features (como posição na matriz e distância ao centro), o modelo não conseguiu superar a aleatoriedade do jogo.
 
-## 🔧 Requisitos
+Tentativas reais de seguir as sugestões resultaram em sucessivas derrotas, indicando a inviabilidade prática do modelo para predição eficaz.
 
-- Python 3.9+
-- Pacotes:
-  - `pandas`
-  - `numpy`
-  - `selenium`
-  - `webdriver-manager`
-  - `matplotlib`
-  - `seaborn`
+🧠 Aprendizados obtidos
+Entendimento completo de ciclo de dados: coleta → limpeza → modelagem → análise → predição.
 
-Instale todos com:
-```bash
-pip install -r requirements.txt
-```
+Aplicação prática de Selenium, Pandas, Scikit-learn e automatização de pipelines.
 
----
+Consolidação de boas práticas em projetos de machine learning aplicado.
 
-## 💡 Futuras melhorias
+Compreensão dos limites éticos e técnicos de aplicar IA sobre sistemas com segurança criptográfica.
 
-- Adaptar para bot de Telegram.
-- Análises separadas por quantidade de minas.
-- Sugestões em tempo real.
+🚪 Decisão final
+Encerrar o projeto como prova de conceito bem-sucedida em termos de desenvolvimento e aprendizado, mas inviável comercialmente ou como ferramenta de predição confiável.
 
----
+🚀 Possíveis rumos futuros
+Explorar outros tipos de jogos ou sistemas onde haja maior previsibilidade.
 
-## ⚠️ Aviso
+Investir em modelos mais sofisticados, como redes neurais ou modelos sequenciais (LSTM), caso haja datasets maiores e mais ricos.
 
-Este projeto é apenas para fins educacionais e estatísticos. **Use com responsabilidade.**
+Criar um sistema de recomendação probabilística, sem alegar predição, apenas para apoio estratégico aos jogadores.
+
+🙌 Agradecimentos e encerramento
+Agradeço a mim mesmo pelo empenho e ao suporte técnico que me acompanhou nesta jornada!
+Projeto encerrado com muita aprendizagem e novas ideias para futuras aventuras com dados e IA.
